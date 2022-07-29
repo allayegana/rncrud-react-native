@@ -1,18 +1,26 @@
-import React from "react";
-import { View, Text, FlatList, Alert } from "react-native";
-import Usuarios from '../data/Users'
-import { ListItem, Button } from "react-native-elements";
+import React, { useContext } from "react";
+import { View, FlatList, Alert } from "react-native";
+import { ListItem } from "react-native-elements";
+import Icon from "react-native-vector-icons/AntDesign";
 import { Avatar } from "react-native-elements/dist/avatar/Avatar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import usersContext from "../context/userContext";
+
 
 
 export default props => {
+
+    const { state, dispatch } = useContext(usersContext)
 
     function confirmUserDeletion(user) {
         Alert.alert('Excluir Usuario', 'Deseja excluir o usuario ?', [
             {
                 text: "Sim",
                 onPress() {
-                    console.warn('delete' + user.id)
+                    dispatch({
+                        type: 'deleteUser',
+                        payload: user
+                    })
                 }
             },
             {
@@ -24,29 +32,43 @@ export default props => {
 
     function getUserItem({ item: user }) {
         return (
-            <ListItem>
-                <ListItem.Content key={user.id}
-                    onPress={() => props.navigation.navigate("UserForm", user)}
-                >
-                    <Avatar source={{ uri: user.avatarUrl }} />
-                    <ListItem.Title style={{ fontSize: 20, fontWeight: 'bold' }}>{user.name}</ListItem.Title>
+            <ListItem
+                onPress={() => props.navigation.navigate("UserForm", user)}
+                bottomDivider
+            >
+
+                <ListItem.Content key={user.id}>
+
+                    <View style={{ flexDirection: 'row' }}>
+                        <Avatar source={{ uri: user.avatarUrl }} />
+                        <ListItem.Title style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 10 }}>{user.name}</ListItem.Title>
+                    </View>
                     <ListItem.Subtitle style={{ fontSize: 17 }}>{user.email}</ListItem.Subtitle>
 
                 </ListItem.Content>
-                <Button
-                    onPress={() => props.navigation.push("Userform", user)}
-                    title={"edit"}
-                    titleStyle={{ fontSize: 17 }}
-                    buttonStyle={{ backgroundColor: "orange" }}
-                    type="clear"
 
+                <Icon
+                    onPress={() => {
+                        dispatch({
+                            type: user.id ? 'updateUser' : 'createUser',
+                            payload: user
+                        })
+                        props.navigation.navigate("UserForm", user)
+                    }}
+
+                    name='edit'
+                    color='orange'
+                    size={27}
                 />
-                <Button
+
+
+                <Icon
+
                     onPress={() => confirmUserDeletion(user)}
-                    title={"excl"}
-                    titleStyle={{ fontSize: 17 }}
-                    buttonStyle={{ backgroundColor: "red" }}
-                    type="clear"
+
+                    name='delete'
+                    color='red'
+                    size={25}
                 />
             </ListItem>
 
@@ -55,12 +77,14 @@ export default props => {
     }
 
     return (
-        <View>
-            <FlatList
-                keyExtractor={item => item.id.toString()}
-                data={Usuarios}
-                renderItem={getUserItem}
-            />
-        </View>
+        <SafeAreaProvider>
+            <View>
+                <FlatList
+                    keyExtractor={item => item.id.toString()}
+                    data={state.Users}
+                    renderItem={getUserItem}
+                />
+            </View>
+        </SafeAreaProvider>
     )
 }
